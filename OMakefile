@@ -140,6 +140,7 @@ FILES[] =
 	lexer
 	ini
 	parser
+	utils
 
 LIB = nini
 

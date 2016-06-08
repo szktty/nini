@@ -3,6 +3,8 @@ open Spotlib.Spot
 open Lexing
 open Parser
 
+exception Error of Ini_types.error
+
 let next_line lexbuf =
   let pos = lexbuf.lex_curr_p in
   lexbuf.lex_curr_p <-
@@ -20,17 +22,15 @@ let end_pos lexbuf =
   revise_pos (lexeme_end_p lexbuf) lexbuf
 
 let syntax_error lexbuf msg =
-  { Ini_type.pos = start_pos lexbuf; error = msg }
+  { Ini_types.pos = Some (start_pos lexbuf); reason = msg }
 
 let skip_lines lexbuf =
-  let rec skip = function
-    | [] -> ()
-    | '\r' :: '\n' :: tl -> next_line lexbuf; skip tl
-    | '\r' :: tl -> next_line lexbuf; skip tl
-    | '\n' :: tl -> next_line lexbuf; skip tl
-    | _ :: tl -> next_line lexbuf; skip tl
+  let skip = function
+    | (_, "") -> ()
+    | (_, "\r\n") | (_, "\r") | (_, "\n") -> next_line lexbuf
+    | _ -> ()
   in
-  skip @@ String.to_list @@ lexeme lexbuf
+  List.iter skip (String.lines @@ lexeme lexbuf)
 }
 
 let word = ['a'-'z' 'A'-'Z' '0'-'9' '_' '.' '-']+
@@ -49,6 +49,5 @@ rule main =
   | space+ as s { BLANK s }
   | word as s { WORD s }
   | comment as s { COMMENT s }
-  | _ as s { VALUE (Char.to_string s) }
+  | _ as c { VALUE (Utils.string_of_char c) }
   | eof { EOF }
-

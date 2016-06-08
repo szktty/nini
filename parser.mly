@@ -1,4 +1,6 @@
 %{
+open Spotlib.Spot
+open Ini_types
 
 %}
 
@@ -12,7 +14,7 @@
 %token <string> VALUE
 %token <string> COMMENT
 
-%start <Ini.t> main
+%start <Ini_types.t> main
 
 %%
 
@@ -36,15 +38,18 @@ comment_line:
   | COMMENT term { $1 }
 
 sections_with_skip_lines:
-  | sections_rev { List.rev $1 }
-  | skip_lines sections_rev { List.rev $2 }
+  | sections { $1 }
+  | skip_lines sections { $2 }
 
-sections_rev:
+sections:
+  | rev_sections { List.rev $1 }
+
+rev_sections:
   | (* empty *) { [] }
-  | sections_rev section { $2 :: $1 }
+  | rev_sections section { $2 :: $1 }
 
 section:
-  | title_part properties { ($1, $2) }
+  | title_part properties { { name = $1; items = $2 } }
 
 title_part:
   | title term { $1 }
@@ -64,8 +69,13 @@ property_with_skip_lines:
   | property skip_lines { $1 }
 
 property:
-  | key_part EQ values_rev term
-  { ($1, String.strip (String.concat (List.rev $3))) }
+  | key_part EQ values term
+  {
+    let buf = Buffer.create 16 in
+    List.iter (fun v -> Buffer.add_string buf v) $3;
+    let s = String.trim (Buffer.contents buf) in
+    { key = $1; value = s }
+  }
 
 key_part:
   | WORD { $1 }
@@ -73,9 +83,12 @@ key_part:
   | BLANK WORD { $1 }
   | BLANK WORD BLANK { $1 }
 
-values_rev:
+values:
+  | rev_values { List.rev $1 }
+
+rev_values:
   | single_value { [$1] }
-  | values_rev single_value { $2 :: $1 }
+  | rev_values single_value { $2 :: $1 }
 
 single_value:
   | WORD { $1 }

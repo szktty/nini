@@ -1,23 +1,9 @@
 open Spotlib.Spot
+open Ini_types
 
-type t
-
-type item = {
-  key : string;
-  value : string;
-}
-
-type section = {
-  name : string;
-  items : item list;
-}
-
-type error = {
-  pos : Lexing.position option;
-  reason : string;
-}
-
-val parse : string -> (t, error) Result.t
+val parse_file : string -> (t, error) Result.t option
+val parse_file_exn : string -> (t, error) Result.t
+val parse_string : string -> (t, error) Result.t
 
 val sections : t -> section list
 val options : t -> section:string -> item list option
