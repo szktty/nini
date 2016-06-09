@@ -49,7 +49,7 @@ rev_sections:
   | rev_sections section { $2 :: $1 }
 
 section:
-  | title_part properties { { name = $1; items = $2 } }
+  | title_part params { { name = $1; params = $2 } }
 
 title_part:
   | title term { $1 }
@@ -60,15 +60,15 @@ title_part:
 title:
   | LBRACK WORD RBRACK { $2 }
 
-properties:
+params:
   | (* empty *) { [] }
-  | property_with_skip_lines properties { $1 :: $2 }
+  | param_with_skip_lines params { $1 :: $2 }
 
-property_with_skip_lines:
-  | property { $1 }
-  | property skip_lines { $1 }
+param_with_skip_lines:
+  | param { $1 }
+  | param skip_lines { $1 }
 
-property:
+param:
   | key_part EQ values term
   {
     let buf = Buffer.create 16 in

@@ -1,6 +1,11 @@
 open Spotlib.Spot
 open Ini_types
 
+type t = Ini_types.t
+type section = Ini_types.section
+type param = Ini_types.param
+type error = Ini_types.error
+
 let parse lexbuf file =
   lexbuf.Lexing.lex_curr_p <-
     { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = file };
@@ -23,31 +28,31 @@ let parse_file file =
 let sections t =
   List.map List.hd t
 
-let options t sec =
-  match List.find t ~f:(fun (sec', _) -> sec = sec') with
-  | Some (_, opts) -> Some opts
+let params t ~section =
+  match List.find_opt (fun sec' -> section = sec'.name) t with
+  | None -> []
+  | Some { name = _; params } -> params
+
+let get t ~section ~param =
+  let params' = params t ~section in
+  match List.find_opt (fun param' -> param = param'.key) params' with
+  | Some param -> Some param.value
   | None -> None
 
-let mem_section t sec =
-  is_some @@ options t sec
+let get_exn t ~section ~param =
+  Option.from_Some & get t ~section ~param
 
-let get t sec opt =
-  match options t sec with
-  | Some opts ->
-    begin match List.find opts ~f:(fun (k, _) -> k = opt) with
-    | Some (_, v) -> Some v
-    | None -> None
-    end
-  | None -> None
+let exists ?param t ~section =
+  match param with
+  | None -> 0 = (List.length & params t ~section)
+  | Some param -> Utils.is_some & get t ~section ~param
 
-let mem_option t sec opt =
-  is_some @@ get t sec opt
+let iter t ~f =
+  List.iter (fun sec ->
+               List.iter (fun param -> f sec param.key param.value)
+                 sec.params)
+    t.sections
 
-let iter (t : t) sec f =
-  match options t sec with
-  | Some opts -> List.iter opts ~f:(fun (k, v) -> f k v)
-  | None -> ()
-
-let split ?(on=',') s =
+let split_value ?(on=',') s =
   List.map (String.split ~on s)
     ~f:(fun s' -> String.strip s' ~drop:(fun c -> c = ' '))
