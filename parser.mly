@@ -1,7 +1,5 @@
 %{
 open Spotlib.Spot
-open Ini_types
-
 %}
 
 %token EOF
@@ -14,7 +12,7 @@ open Ini_types
 %token <string> VALUE
 %token <string> COMMENT
 
-%start <Ini_types.t> main
+%start <Config.t> main
 
 %%
 
@@ -49,7 +47,7 @@ rev_sections:
   | rev_sections section { $2 :: $1 }
 
 section:
-  | title_part params { { name = $1; params = $2 } }
+  | title_part params { {Config.name = $1; params = $2 } }
 
 title_part:
   | title term { $1 }
@@ -74,7 +72,7 @@ param:
     let buf = Buffer.create 16 in
     List.iter (fun v -> Buffer.add_string buf v) $3;
     let s = String.trim (Buffer.contents buf) in
-    { key = $1; value = s }
+    ($1, s)
   }
 
 key_part:

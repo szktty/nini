@@ -3,8 +3,6 @@ open Spotlib.Spot
 open Lexing
 open Parser
 
-exception Error of Ini_types.error
-
 let next_line lexbuf =
   let pos = lexbuf.lex_curr_p in
   lexbuf.lex_curr_p <-
@@ -20,9 +18,6 @@ let start_pos lexbuf =
 
 let end_pos lexbuf =
   revise_pos (lexeme_end_p lexbuf) lexbuf
-
-let syntax_error lexbuf msg =
-  { Ini_types.pos = Some (start_pos lexbuf); reason = msg }
 
 let skip_lines lexbuf =
   let skip = function

@@ -163,4 +163,4 @@ LIB = nini
 # .DEFAULT: $(OCamlProgram $(PROGRAM), $(FILES))
 
 clean:
-	rm -rf *.automaton *.conflicts *.annot *.opt *.omc *.cmi *.cmt *.cmti *.cmx *.o $(PROGRAM) parser.ml parser.mli lexer.ml#
+	rm -rf *.automaton *.conflicts *.annot *.opt *.omc *.cmi *.cmt *.cmti *.cmx *.o parser.ml parser.mli lexer.ml
